@@ -1,0 +1,6 @@
+- standard_user: 正常使用者
+- locked_out_user: 帳戶被鎖定，登入時會噴錯 Epic sadface: Sorry, this user has been locked out.
+- problem_user: 貨物圖片有問題，進About頁面會出錯
+- performance_glitch_user: 效能有問題，速度超慢
+- error_user: 結帳頁面有問題，會出錯
+- visual_user: 第一張圖片非預期商品圖，其他商品正確
