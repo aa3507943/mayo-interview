@@ -3,7 +3,7 @@ from fixtures.products import Products
 from utils.helpers import get_price_value
 
 @pytest.mark.smoke
-def test_完整結帳流程與金額精確計算驗證(logged_in_page, cart_page, checkout_page, test_info):
+def test_complete_checkout_flow_and_total_calculation(logged_in_page, cart_page, checkout_page, test_info):
     """驗證結帳流程，並精確計算 商品總額 + 稅金 = 總計金額"""
     test_info["data"] = f"結帳商品: {Products.BACKPACK.name}"
     test_info["expected"] = "結帳總額應等於 商品單價 + 稅金(約8%)"
@@ -33,7 +33,7 @@ def test_完整結帳流程與金額精確計算驗證(logged_in_page, cart_page
     test_info["actual"] = f"金額計算正確！(小計:{subtotal} + 稅金:{tax} = 總計:{total})"
 
 @pytest.mark.negative
-def test_結帳資訊欄位必填驗證(logged_in_page, cart_page, checkout_page, test_info):
+def test_checkout_required_fields_validation(logged_in_page, cart_page, checkout_page, test_info):
     """驗證未填寫姓名時應出現提示訊息"""
     test_info["data"] = "未填寫任何資訊點擊繼續"
     test_info["expected"] = "顯示 Error: First Name is required"
@@ -48,7 +48,7 @@ def test_結帳資訊欄位必填驗證(logged_in_page, cart_page, checkout_page
     test_info["actual"] = f"系統正確攔截並顯示: {error_msg}"
 
 @pytest.mark.negative
-def test_錯誤帳號結帳流程驗證(login_page, inventory_page, cart_page, checkout_page, test_info):
+def test_error_user_checkout_flow(login_page, inventory_page, cart_page, checkout_page, test_info):
     """驗證 error_user 在結帳流程最後一步應無法正常完成"""
     from fixtures.users import Users
     test_info["data"] = f"帳號: {Users.ERROR_USER.username}"

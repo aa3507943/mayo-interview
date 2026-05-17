@@ -18,7 +18,7 @@ def get_inventory_data(inventory_page):
     return data
 
 @pytest.mark.account
-def test_問題帳號資料一致性驗證(login_page, inventory_page, header, test_info):
+def test_problem_user_data_consistency(login_page, inventory_page, header, test_info):
     """以 standard_user 為基準 (Golden Sample)，驗證 problem_user 的商品資料是否錯誤"""
     
     # 1. 先用 standard_user 取得 Golden Sample
@@ -84,7 +84,7 @@ def test_問題帳號資料一致性驗證(login_page, inventory_page, header, t
         test_info["actual"] = actual_str + "<br><b style='color:green;'>資料完全一致</b>"
 
 @pytest.mark.account
-def test_問題帳號About頁面跳轉驗證(login_page, inventory_page, header, test_info):
+def test_problem_user_about_page_redirection(login_page, inventory_page, header, test_info):
     """驗證 problem_user 點擊側邊欄 About 後是否導向錯誤頁面 (404)"""
     test_info["data"] = f"帳號: {Users.PROBLEM_USER.username}"
     test_info["expected"] = "點擊 About 後不應導向 404 錯誤頁面"
@@ -100,7 +100,7 @@ def test_問題帳號About頁面跳轉驗證(login_page, inventory_page, header,
     test_info["actual"] = "成功跳轉至正確的 About 頁面"
 
 @pytest.mark.account
-def test_效能延遲帳號Inventory頁面載入驗證(login_page, inventory_page, test_info):
+def test_performance_glitch_user_inventory_loading(login_page, inventory_page, test_info):
     """驗證 performance_glitch_user 登入後進入 inventory.html 時是否存在明顯的效能異常 (約5秒)"""
     test_info["data"] = f"帳號: {Users.PERFORMANCE_GLITCH_USER.username}"
     test_info["expected"] = "進入 inventory.html 的載入過程應在 3 秒內完成"
@@ -116,7 +116,7 @@ def test_效能延遲帳號Inventory頁面載入驗證(login_page, inventory_pag
     test_info["actual"] = f"載入順暢，實際耗時: {duration:.2f} 秒"
 
 @pytest.mark.visual
-def test_視覺異常帳號佈局驗證(login_page, inventory_page, test_info):
+def test_visual_user_layout_validation(login_page, inventory_page, test_info):
     """驗證 visual_user 登入後的頁面佈局是否存在異常偏移"""
     test_info["data"] = f"帳號: {Users.VISUAL_USER.username}"
     test_info["expected"] = "首張商品圖片必須正常顯示 (預期為 Backpack)"

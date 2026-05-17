@@ -3,7 +3,7 @@ from fixtures.users import Users
 
 @pytest.mark.smoke
 @pytest.mark.parametrize("user", Users.ALL_USERS, ids=[u.username for u in Users.ALL_USERS])
-def test_各類帳號登入驗證(login_page, inventory_page, user, test_info):
+def test_account_login_validation(login_page, inventory_page, user, test_info):
     """驗證不同權限與特性的帳號是否能按照預期行為登入系統"""
     test_info["data"] = f"帳號: {user.username}, 密碼: {user.password}"
     test_info["expected"] = "鎖定帳號應顯示錯誤訊息，其餘帳號應成功跳轉至商品頁"
@@ -20,7 +20,7 @@ def test_各類帳號登入驗證(login_page, inventory_page, user, test_info):
         test_info["actual"] = "登入成功，已跳轉至 inventory.html"
 
 @pytest.mark.negative
-def test_無效帳密登入失敗驗證(login_page, test_info):
+def test_invalid_credentials_login_failure(login_page, test_info):
     """驗證系統是否能正確阻擋錯誤的登入資訊"""
     test_info["data"] = "帳號: wrong_user, 密碼: wrong_pass"
     test_info["expected"] = "顯示 Username and password do not match 錯誤訊息"
@@ -32,7 +32,7 @@ def test_無效帳密登入失敗驗證(login_page, test_info):
     test_info["actual"] = f"驗證成功，系統顯示錯誤: {error}"
 
 @pytest.mark.regression
-def test_使用者登出功能(login_page, inventory_page, header, test_info):
+def test_user_logout_functionality(login_page, inventory_page, header, test_info):
     """驗證使用者在登入後可以安全登出系統"""
     test_info["data"] = f"帳號: {Users.STANDARD_USER.username}"
     test_info["expected"] = "登出後頁面應重導向至首頁 (/) 且無法再看到商品列表"

@@ -3,7 +3,7 @@ from fixtures.products import Products
 from utils.helpers import get_price_value
 
 @pytest.mark.smoke
-def test_購物車內容跨頁面保存與金額驗證(logged_in_page, cart_page, test_info):
+def test_cart_state_persistence_and_price_validation(logged_in_page, cart_page, test_info):
     """驗證加入商品後，進入購物車頁面資訊（名稱、價格）是否完全正確"""
     test_info["data"] = f"商品: {Products.BACKPACK.name}"
     test_info["expected"] = "購物車應正確顯示商品名稱，且價格應為 " + Products.BACKPACK.price
@@ -22,7 +22,7 @@ def test_購物車內容跨頁面保存與金額驗證(logged_in_page, cart_page
     test_info["actual"] = f"驗證通過！購物車商品: {item_name}, 價格: {item_price_text}"
 
 @pytest.mark.regression
-def test_在購物車頁面移除商品後清單清空(logged_in_page, cart_page, test_info):
+def test_remove_item_from_cart_clears_list(logged_in_page, cart_page, test_info):
     """驗證在購物車頁面移除商品後，商品清單應即時消失"""
     test_info["data"] = f"商品: {Products.BACKPACK.name}"
     test_info["expected"] = "移除後商品清單應不含任何項目"
