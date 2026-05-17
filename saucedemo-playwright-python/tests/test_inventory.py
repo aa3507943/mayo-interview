@@ -42,3 +42,44 @@ def test_product_sorting_all_options(logged_in_page, sort_option, label, test_in
         expected = sorted(name_elements, reverse=(sort_option == "za"))
         assert name_elements == expected
         test_info["actual"] = f"名稱排序驗證通過: {name_elements[:2]}..."
+
+@pytest.mark.smoke
+def test_inventory_page_products_data_validation(logged_in_page, test_info):
+    """驗證商品列表頁上的所有商品名稱、描述、價格、圖片是否與系統預設資料(Fixtures)完全一致"""
+    
+    golden_data = [
+        Products.BACKPACK, Products.BIKE_LIGHT, Products.BOLT_TSHIRT,
+        Products.FLEECE_JACKET, Products.ONESIE, Products.TEST_ALL_THE_THINGS_TSHIRT
+    ]
+    
+    test_info["data"] = f"商品總數: {len(golden_data)}"
+    test_info["expected"] = "列表商品資訊(名稱、描述、價格、圖片)應與預期完全一致"
+    
+    logged_in_page.page.wait_for_selector(".inventory_item", state="visible")
+    items = logged_in_page.page.locator(".inventory_item").all()
+    
+    assert len(items) == len(golden_data), f"預期 {len(golden_data)} 項商品，實際顯示 {len(items)} 項"
+    
+    diffs = []
+    for i, expected_item in enumerate(golden_data):
+        item = items[i]
+        actual_name = item.locator(".inventory_item_name").inner_text()
+        actual_desc = item.locator(".inventory_item_desc").inner_text()
+        actual_price = item.locator(".inventory_item_price").inner_text()
+        actual_img = item.locator(".inventory_item_img img").get_attribute("src")
+        
+        item_diffs = []
+        if actual_name != expected_item.name: item_diffs.append("名稱")
+        if actual_desc != expected_item.description: item_diffs.append("描述")
+        if actual_price != expected_item.price: item_diffs.append("價格")
+        if expected_item.image_url.split('/')[-1] not in actual_img: item_diffs.append("圖片")
+        
+        if item_diffs:
+            diffs.append(f"商品 {i+1} ({expected_item.name}) 差異: {', '.join(item_diffs)}")
+            
+    if diffs:
+        test_info["actual"] = "<br>".join(diffs)
+        pytest.fail(f"商品資訊驗證失敗: {diffs}")
+    else:
+        test_info["actual"] = "所有商品資訊驗證無誤"
+

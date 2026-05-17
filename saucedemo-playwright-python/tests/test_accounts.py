@@ -19,32 +19,31 @@ def get_inventory_data(inventory_page):
 
 @pytest.mark.account
 def test_problem_user_data_consistency(login_page, inventory_page, header, test_info):
-    """以 standard_user 為基準 (Golden Sample)，驗證 problem_user 的商品資料是否錯誤"""
+    """以 fixtures/products.py 中定義的真實資料為基準 (Golden Sample)，驗證 problem_user 的商品資料是否錯誤"""
     
-    # 1. 先用 standard_user 取得 Golden Sample
-    login_page.load()
-    login_page.login(Users.STANDARD_USER.username, Users.STANDARD_USER.password)
-    inventory_page.page.wait_for_selector(".inventory_item", state="visible")
-    golden_data = get_inventory_data(inventory_page)
-    print("GOLDEN DATA DEBUG:", golden_data)
-    header.logout()
+    # 1. 取得 Golden Sample (來自 fixtures)
+    golden_data = [
+        Products.BACKPACK, Products.BIKE_LIGHT, Products.BOLT_TSHIRT,
+        Products.FLEECE_JACKET, Products.ONESIE, Products.TEST_ALL_THE_THINGS_TSHIRT
+    ]
     
     # 動態產生預期結果字串，將 Golden Sample 列出
-    expected_str = "商品資料必須與 standard_user (Golden Sample) 完全一致。基準資料如下：<br>"
+    expected_str = "商品資料必須與基準資料 (Fixtures) 完全一致。基準資料如下：<br>"
     for i, item in enumerate(golden_data):
-        desc_short = item['desc'][:40] + "..." if len(item['desc']) > 40 else item['desc']
-        img_name = item['img'].split('/')[-1]
-        img_url = f"https://www.saucedemo.com{item['img']}"
+        desc_short = item.description[:40] + "..." if len(item.description) > 40 else item.description
+        img_name = item.image_url.split('/')[-1]
         expected_str += f"<div style='margin-left: 15px; margin-bottom: 5px; font-size: 0.9em; display: flex; align-items: center;'>"
-        expected_str += f"<img src='{img_url}' style='width: 40px; height: 50px; margin-right: 10px; border: 1px solid #ccc;' />"
-        expected_str += f"<div><b>{i+1}. {item['name']}</b> ({item['price']})<br>"
+        expected_str += f"<img src='{item.image_url}' style='width: 40px; height: 50px; margin-right: 10px; border: 1px solid #ccc;' />"
+        expected_str += f"<div><b>{i+1}. {item.name}</b> ({item.price})<br>"
         expected_str += f"說明: {desc_short}<br>"
         expected_str += f"圖片檔名: <code>{img_name}</code></div>"
         expected_str += "</div>"
     test_info["expected"] = expected_str
     
-    # 2. 再用 problem_user 進行比對
+    # 2. 用 problem_user 進行比對
+    login_page.load()
     login_page.login(Users.PROBLEM_USER.username, Users.PROBLEM_USER.password)
+    inventory_page.page.wait_for_selector(".inventory_item", state="visible")
     problem_data = get_inventory_data(inventory_page)
     
     # 3. 比對差異
@@ -53,10 +52,11 @@ def test_problem_user_data_consistency(login_page, inventory_page, header, test_
         std = golden_data[i]
         prob = problem_data[i]
         item_diffs = []
-        if std["name"] != prob["name"]: item_diffs.append(f"名稱({prob['name']})")
-        if std["desc"] != prob["desc"]: item_diffs.append("說明文字")
-        if std["price"] != prob["price"]: item_diffs.append(f"售價({prob['price']})")
-        if std["img"] != prob["img"]: item_diffs.append("圖片路徑")
+        if std.name != prob["name"]: item_diffs.append(f"名稱({prob['name']})")
+        if std.description != prob["desc"]: item_diffs.append("說明文字")
+        if std.price != prob["price"]: item_diffs.append(f"售價({prob['price']})")
+        # 由於 get_attribute("src") 可能拿到相對路徑，這裡做彈性比對
+        if std.image_url.split('/')[-1] not in prob["img"]: item_diffs.append("圖片路徑")
         
         if item_diffs:
             diffs.append(f"商品 {i+1} 異常項目: {', '.join(item_diffs)}")
@@ -68,7 +68,7 @@ def test_problem_user_data_consistency(login_page, inventory_page, header, test_
     for i, item in enumerate(problem_data):
         desc_short = item['desc'][:40] + "..." if len(item['desc']) > 40 else item['desc']
         img_name = item['img'].split('/')[-1]
-        img_url = f"https://www.saucedemo.com{item['img']}"
+        img_url = f"https://www.saucedemo.com{item['img']}" if item['img'].startswith("/") else item['img']
         actual_str += f"<div style='margin-left: 15px; margin-bottom: 5px; font-size: 0.9em; display: flex; align-items: center;'>"
         actual_str += f"<img src='{img_url}' style='width: 40px; height: 50px; margin-right: 10px; border: 1px solid #ccc;' />"
         actual_str += f"<div><b>{i+1}. {item['name']}</b> ({item['price']})<br>"
@@ -119,13 +119,14 @@ def test_performance_glitch_user_inventory_loading(login_page, inventory_page, t
 def test_visual_user_layout_validation(login_page, inventory_page, test_info):
     """驗證 visual_user 登入後的頁面佈局是否存在異常偏移"""
     test_info["data"] = f"帳號: {Users.VISUAL_USER.username}"
-    test_info["expected"] = "首張商品圖片必須正常顯示 (預期為 Backpack)"
+    test_info["expected"] = f"首張商品圖片必須正常顯示 (預期為 {Products.BACKPACK.name} 的圖片)"
     
     login_page.load()
     login_page.login(Users.VISUAL_USER.username, Users.VISUAL_USER.password)
     
     # 驗證第一張圖片是否正常
     img_src = inventory_page.page.locator(".inventory_item_img img").first.get_attribute("src")
-    assert "sl-404" not in img_src, f"首張圖片顯示異常: {img_src}"
+    expected_img_filename = Products.BACKPACK.image_url.split('/')[-1]
+    assert expected_img_filename in img_src, f"首張圖片顯示異常: {img_src} (應包含 {expected_img_filename})"
     
-    test_info["actual"] = "首張圖片正常載入"
+    test_info["actual"] = "首張圖片正確載入 (符合 Fixtures 定義)"
